@@ -1,0 +1,43 @@
+version: '3'
+
+services:
+  node:
+    build:
+      context: backend
+    container_name: node
+    entrypoint: dockerize -wait tcp://mysql:3306 -timeout 30s docker-entrypoint.sh node index.js
+    volumes:
+      - ./backend/app:/usr/src/app
+      - /usr/src/app/node_modules
+    networks:
+      - full-cycle-network
+    tty: true
+    depends_on:
+      - mysql
+  
+  mysql:
+    build: 
+      context: database
+    container_name: mysql
+    restart: always
+    tty: true
+    volumes: 
+      - ./database/mysql:/var/lib/mysql
+    networks: 
+      - full-cycle-network
+  
+  nginx:
+    build:
+      context: nginx
+    container_name: nginx
+    tty: true
+    ports:
+     - "8080:80"
+    networks:
+      - full-cycle-network
+    depends_on:
+      - node
+
+networks:
+  full-cycle-network:
+    driver: bridge
